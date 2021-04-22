@@ -32,6 +32,10 @@ func parseFile(fset *token.FileSet, filePath, template string) (af *ast.File, mo
 	skipped := make(map[ast.Node]bool)
 	ast.Inspect(af, func(n ast.Node) bool {
 		switch typ := n.(type) {
+		case *ast.File:
+			fmt.Printf("//package %s\n", typ.Name)
+			addFileComment(typ, commentTemplate)
+			cmap[typ] = []*ast.CommentGroup{typ.Doc}
 		case *ast.FuncDecl:
 			if skipped[typ] || !typ.Name.IsExported() {
 				return true
@@ -88,7 +92,29 @@ func parseFile(fset *token.FileSet, filePath, template string) (af *ast.File, mo
 	// Rebuild comments
 	af.Comments = cmap.Filter(af).Comments()
 	modified = len(af.Comments) > numComments
+	modified = true
 	return
+}
+
+func addFileComment(fd *ast.File, commentTemplate string) {
+	text := fmt.Sprintf("Package %s", fd.Name)
+	if fd.Doc == nil || !strings.HasPrefix(strings.TrimSpace(fd.Doc.Text()), text) {
+		/*
+			pos := fd.Pos() - token.Pos(1)
+			if fd.Doc != nil {
+				pos = fd.Doc.Pos()
+				//text = text +  fd.Doc.Text()
+			}
+		*/
+		//fmt.Printf("333:%s\n", text)
+		commentText := "// " + text + " ..."
+		if fd.Doc == nil {
+			fd.Doc = &ast.CommentGroup{List: []*ast.Comment{{Slash: 0, Text: commentText}}}
+		} else {
+			fd.Doc.List = append([]*ast.Comment{{Slash: 0, Text: commentText}}, fd.Doc.List...)
+		}
+	}
+
 }
 
 func addFuncDeclComment(fd *ast.FuncDecl, commentTemplate string) {
