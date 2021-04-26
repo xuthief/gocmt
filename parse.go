@@ -39,6 +39,7 @@ func parseFile(fset *token.FileSet, filePath, template string) (af *ast.File, mo
 
 		case *ast.ImportSpec:
 			fixImportComment(typ)
+			//cmap[typ] = []*ast.CommentGroup{typ.Doc}
 
 		case *ast.FuncDecl:
 			if skipped[typ] || !typ.Name.IsExported() {
@@ -118,6 +119,23 @@ func addFileComment(fd *ast.File) {
 }
 
 func fixImportComment(fd *ast.ImportSpec) {
+	//fmt.Printf("2: %v\n", fd.Path)
+	if fd.Doc != nil {
+		//text := "//com---------ment"
+		//fd.Doc.List = []*ast.Comment{{Slash: fd.Doc.Pos(), Text: text}}
+		//fd.Doc.List = []*ast.Comment{}
+		for _, l := range fd.Doc.List {
+			//	continue
+			//	fmt.Printf("%v", l)
+			l.Text = "//com---------ment"
+			if l != nil {
+				fmt.Printf("1:%d:%s\n", l.Pos(), l.Text)
+			}
+		}
+	}
+	if fd.Name.String() == "" {
+
+	}
 }
 
 func addFuncDeclComment(fd *ast.FuncDecl, commentTemplate string) {
